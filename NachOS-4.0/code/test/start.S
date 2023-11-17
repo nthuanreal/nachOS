@@ -58,6 +58,78 @@ Add:
 	j 	$31
 	.end Add
 
+	.globl PrintString
+	.ent	PrintString
+PrintString:
+	addiu $2,$0,SC_PrintString
+	syscall
+	j 	$31
+	.end PrintString
+
+	.globl Connect
+	.ent	Connect
+Connect:
+	addiu $2,$0,SC_Connect
+	syscall
+	j 	$31
+	.end Connect
+
+	.globl OpenSocket
+	.ent	OpenSocket
+OpenSocket:
+	addiu $2,$0,SC_OpenSocket
+	syscall
+	j 	$31
+	.end OpenSocket
+
+	.globl Send
+	.ent	Send
+Send:
+	addiu $2,$0,SC_Send
+	syscall
+	j 	$31
+	.end Send
+
+	.globl Receive
+	.ent	Receive
+Receive:
+	addiu $2,$0,SC_Receive
+	syscall
+	j 	$31
+	.end Receive
+
+	.globl MyCloseSocket
+	.ent	MyCloseSocket
+MyCloseSocket:
+	addiu $2,$0,SC_MyCloseSocket
+	syscall
+	j 	$31
+	.end MyCloseSocket
+
+	.globl Bind
+	.ent	Bind
+Bind:
+	addiu $2,$0,SC_Bind
+	syscall
+	j 	$31
+	.end Bind
+
+	.globl Listen
+	.ent	Listen
+Listen:
+	addiu $2,$0,SC_Listen
+	syscall
+	j 	$31
+	.end Listen
+
+	.globl Accept
+	.ent	Accept
+Accept:
+	addiu $2,$0,SC_Accept
+	syscall
+	j 	$31
+	.end Accept
+
 	.globl Exit
 	.ent	Exit
 Exit:

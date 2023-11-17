@@ -29,6 +29,7 @@
 #define MaxFileLength 32
 #define READ_ONLY 1
 #define READ_WRITE 0
+#define MAX_STRING_LENGTH 255
 //----------------------------------------------------------------------
 // ExceptionHandler
 // 	Entry point into the Nachos kernel.  Called when a user program
@@ -344,6 +345,202 @@ void ExceptionHandler(ExceptionType which)
 
 			ASSERTNOTREACHED();
 
+			break;
+		}
+
+		case SC_PrintString:
+		{
+			int virtAddr = kernel->machine->ReadRegister(4);
+			char* buffer = User2System(virtAddr,MAX_STRING_LENGTH);
+			int len = strlen(buffer);
+
+			for (int i = 0; i < len; i++) {
+				kernel->synchConsoleOut->PutChar(buffer[i]);
+			}
+
+			delete[] buffer;
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_Connect:
+		{
+			int socketID = kernel->machine->ReadRegister(4);
+			int virtAddr = kernel->machine->ReadRegister(5);
+			int portNumber = kernel->machine->ReadRegister(6);
+			char* ipAddr = User2System(virtAddr,MAX_STRING_LENGTH);
+			int result;
+			
+
+			struct sockaddr_in server;
+
+			server.sin_family = AF_INET;
+			server.sin_addr.s_addr = inet_addr(ipAddr);
+			server.sin_port = htons(portNumber);
+
+			if (connect(socketID,(struct sockaddr*) &server, sizeof(server)) < 0) {
+				DEBUG(dbgSys,"Cannot connect to server\n");
+				result = -1;
+			}
+			else {
+				DEBUG(dbgSys,"Connect to server successfully!!!\n");
+				result = 0;
+			}
+
+			delete[] ipAddr;
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_OpenSocket:
+		{
+			int result = socket(AF_INET, SOCK_STREAM, 0);
+
+			if (result < 0) {
+				DEBUG(dbgSys,"Cannot create socket\n");
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_Send:
+		{
+			int socketID = kernel->machine->ReadRegister(4);
+			int virtAddr = kernel->machine->ReadRegister(5);
+			int len = kernel->machine->ReadRegister(6);
+			char* buffer = User2System(virtAddr,MAX_STRING_LENGTH);
+
+			int result = write(socketID,buffer,len);
+
+			if (result < 0) {
+				DEBUG(dbgSys,"Fail to send message\n");
+			}
+			else {
+				DEBUG(dbgSys,"send message successfully\n");
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			delete[] buffer;
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_Receive:
+		{
+			int socketID = kernel->machine->ReadRegister(4);
+			int virtAddr = kernel->machine->ReadRegister(5);
+			int len = kernel->machine->ReadRegister(6);
+			char* buffer = new char[256];
+
+			int result = read(socketID,buffer,255);
+
+			if (result < 0) {
+				DEBUG(dbgSys,"Fail to receive message\n");
+			}
+			else {
+				DEBUG(dbgSys,"Receive message successfully\n");
+				System2User(virtAddr,MAX_STRING_LENGTH,buffer);
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			delete[] buffer;
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_MyCloseSocket:
+		{
+			int socketID = kernel->machine->ReadRegister(4);
+			int result = close(socketID);
+
+			if (result < 0) {
+				DEBUG(dbgSys,"cannot close socket\n");
+			}
+			else {
+				DEBUG(dbgSys, "Close socket succesfully\n");
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+
+		case SC_Bind:
+		{
+			int  socketID = kernel->machine->ReadRegister(4);
+			int virtAddr = kernel->machine->ReadRegister(5);
+			int port = kernel->machine->ReadRegister(6);
+
+			char* ipAddr = User2System(virtAddr,MAX_STRING_LENGTH);
+			struct sockaddr_in server;
+			int result;
+
+			server.sin_family = AF_INET;
+			server.sin_addr.s_addr = inet_addr(ipAddr);
+			server.sin_port = htons(port);
+
+			result = bind(socketID,(struct sockaddr*) &server, sizeof(server));
+
+			if (result < 0) {
+				DEBUG(dbgSys,"Fail to bind\n");
+			}
+			else {
+				DEBUG(dbgSys,"Bind succesfull\n");
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			delete[] ipAddr;
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;	
+		}
+
+		case SC_Listen:
+		{
+			int socketId = kernel->machine->ReadRegister(4);
+			int backlog = kernel->machine->ReadRegister(6);
+			int result = listen(socketId,backlog);
+
+			if (result < 0) {
+				DEBUG(dbgSys,"Fail to listen\n");
+			}
+			else {
+				DEBUG(dbgSys,"Listen Success\n");
+			}
+
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
+		case SC_Accept:
+		{
+			int socketId = kernel->machine->ReadRegister(4);
+			struct sockaddr_in client;
+			int len = sizeof(client);
+			int result = accept(socketId, (struct sockaddr *)&client, (socklen_t*)&len);
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
 			break;
 		}
 

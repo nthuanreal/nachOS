@@ -36,6 +36,15 @@
 #define SC_ThreadJoin   15
 
 #define SC_Add		42
+#define SC_PrintString 43
+#define SC_Connect 44
+#define SC_OpenSocket 45
+#define SC_Send 46
+#define SC_Receive 47
+#define SC_MyCloseSocket 48
+#define SC_Bind 49
+#define SC_Listen 50
+#define SC_Accept 51
 
 #ifndef IN_ASM
 
@@ -59,6 +68,23 @@ void Halt();
 
 int Add(int op1, int op2);
 
+void PrintString(char* str);
+
+int Connect(int socketID,char* ipAddr, int port);
+
+int OpenSocket();
+
+int Send(int socketID, char* buffer, int len);
+
+int Receive(int socketID, char* buffer, int len);
+
+int MyCloseSocket(int socketID);
+
+int Bind(int socketID,char* ipAddr, int port);
+
+int Listen(int socketID, int backlog);
+
+int Accept(int serverID);
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
 /* This user program is done (status = 0 means exited normally). */
