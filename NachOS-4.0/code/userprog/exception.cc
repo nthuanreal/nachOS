@@ -20,7 +20,6 @@
 // Copyright (c) 1992-1996 The Regents of the University of California.
 // All rights reserved.  See copyright.h for copyright notice and limitation
 // of liability and disclaimer of warranty provisions.
-
 #include "copyright.h"
 #include "main.h"
 #include "syscall.h"
@@ -52,26 +51,20 @@
 //	"which" is the kind of exception.  The list of possible exceptions
 //	is in machine.h.
 //----------------------------------------------------------------------
-
 void ExceptionHandler(ExceptionType which)
 {
-
 	int type = kernel->machine->ReadRegister(2);
-
 	DEBUG(dbgSys, "Received Exception " << which << " type: " << type << "\n");
-
 	switch (which)
 	{
 	case SyscallException:
 		switch (type)
 		{
-
 		case SC_Create:
 		{
 			int virtAddr;
 			char *filename = new char[MaxFileLength];
 			virtAddr = kernel->machine->ReadRegister(4);
-
 			// MaxFileLength là = 32
 			filename = User2System(virtAddr, MaxFileLength);
 			if (filename == NULL)
@@ -82,7 +75,6 @@ void ExceptionHandler(ExceptionType which)
 				IncreasePC();
 				return;
 			}
-
 			if (!kernel->fileSystem->Create(filename))
 			{
 				printf("\n Error create file '%s'", filename);
@@ -110,9 +102,8 @@ void ExceptionHandler(ExceptionType which)
 			}
 			else
 			{
-
-				DEBUG(dbgSys, "open file successfully");
-				DEBUG(dbgSys, buf << " " << temp_index);
+				DEBUG(dbgSys, "Open file successfully!");
+				DEBUG(dbgSys, "FileName: " << buf << "\nFileID: " << temp_index);
 
 				kernel->machine->WriteRegister(2, temp_index);
 				kernel->fileSystem->fileDescriptorTable[temp_index].filename = User2System(bufAddr, MaxFileLength);
@@ -141,7 +132,6 @@ void ExceptionHandler(ExceptionType which)
 		}
 		case SC_Read:
 		{
-
 			int bufAddr = kernel->machine->ReadRegister(4);
 			int NumBuf = kernel->machine->ReadRegister(5);
 			int fileID = kernel->machine->ReadRegister(6);
@@ -149,7 +139,11 @@ void ExceptionHandler(ExceptionType which)
 			int NewPos;
 			char *buf = new char[NumBuf];
 			int bytesRead = 0;
-
+			if (fileID != 0 && fileID != 1)
+			{
+				DEBUG(dbgSys, "systemcall!");
+				SysSeek(0, fileID);
+			}
 			if (fileID >= 20 || fileID == 1)
 			{
 				kernel->machine->WriteRegister(2, -1);
@@ -165,19 +159,6 @@ void ExceptionHandler(ExceptionType which)
 
 			if (fileID == 0) // Console input
 			{
-
-				// int i = 0;
-				// char ch = ;
-				// // kernel->synchConsoleIn = new SynchConsoleInput(buf);
-				// while ( &&   ) // Read up to NumBuf - 1 characters
-				// {
-				// 	buf[i] = ch;
-
-				// 	if (ch == '\n' || ch == '\0')
-				// 		break;
-
-				// 	i++;
-				// }
 				int i = 0;
 				char ch;
 				do
@@ -192,26 +173,29 @@ void ExceptionHandler(ExceptionType which)
 
 				System2User(bufAddr, i, buf);
 				kernel->machine->WriteRegister(2, i);
+				DEBUG(dbgSys, "the number of bytes read: "
+								  << i);
+				DEBUG(dbgSys, "Reading successfully \n"
+								  << buf);
+				delete[] buf;
+				IncreasePC();
+				break;
 			}
 			else
 			{
-
 				OldPos = kernel->fileSystem->fileDescriptorTable[fileID].openFile->GetCurrentPos();
 				buf = User2System(bufAddr, NumBuf);
-
 				int before_write = kernel->fileSystem->fileDescriptorTable[fileID].openFile->GetCurrentPos();
-
 				bytesRead = kernel->fileSystem->fileDescriptorTable[fileID].openFile->Read(buf, NumBuf);
 				int after_write = kernel->fileSystem->fileDescriptorTable[fileID].openFile->GetCurrentPos();
 			}
-
 			if (bytesRead > 0)
 			{
 				// Copy data from kernel to user space
 				NewPos = kernel->fileSystem->fileDescriptorTable[fileID].openFile->GetCurrentPos();
 				System2User(bufAddr, bytesRead, buf);
 				kernel->machine->WriteRegister(2, bytesRead);
-				DEBUG(dbgSys, "the number of bytes read"
+				DEBUG(dbgSys, "the number of bytes read: "
 								  << bytesRead);
 				DEBUG(dbgSys, "Reading successfully \n"
 								  << buf);
@@ -220,6 +204,8 @@ void ExceptionHandler(ExceptionType which)
 			{
 				kernel->machine->WriteRegister(2, -1);
 				delete[] buf;
+				IncreasePC();
+				break;
 			}
 
 			delete[] buf;
@@ -233,7 +219,6 @@ void ExceptionHandler(ExceptionType which)
 			int fileID = kernel->machine->ReadRegister(6);
 			int OldPos;
 			int NewPos;
-
 			// mode = 1 means that openFile is just for reading only
 			if (fileID >= 20 || fileID == 0)
 			{
@@ -241,14 +226,12 @@ void ExceptionHandler(ExceptionType which)
 				IncreasePC();
 				break;
 			}
-
 			if (fileID > 1 && (kernel->fileSystem->fileDescriptorTable[fileID].openFile == NULL || kernel->fileSystem->fileDescriptorTable[fileID].mode == 1))
 			{
 				kernel->machine->WriteRegister(2, -1);
 				IncreasePC();
 				break;
 			}
-
 			// WRITE TO CONSOLE BY SYMCHCONSOLEOUT
 			char *buf = User2System(bufAddr, NumBuf);
 			if (fileID == 1)
@@ -263,14 +246,12 @@ void ExceptionHandler(ExceptionType which)
 				}
 				buf[i] = '\n';
 				kernel->synchConsoleOut->PutChar(buf[i]); // write last character
-
 				kernel->machine->WriteRegister(2, i - 1);
 				delete[] buf;
 				IncreasePC();
 				return;
 				break;
 			}
-
 			// WRITE TO FILE
 			int before_write = kernel->fileSystem->fileDescriptorTable[fileID].openFile->GetCurrentPos();
 			if ((kernel->fileSystem->fileDescriptorTable[fileID].openFile->Write(buf, NumBuf)) != 0)
@@ -283,7 +264,6 @@ void ExceptionHandler(ExceptionType which)
 				return;
 				break;
 			}
-
 			IncreasePC();
 			return;
 			break;
@@ -293,15 +273,12 @@ void ExceptionHandler(ExceptionType which)
 		{
 			DEBUG(dbgSys, "Seek file\n");
 			int result = SysSeek(kernel->machine->ReadRegister(4), kernel->machine->ReadRegister(5));
-
 			DEBUG(dbgSys, "SC_Seek returning with code:" << result << "\n");
 			kernel->machine->WriteRegister(2, (int)result);
-
 			IncreasePC();
 			return;
 			break;
 		}
-
 		// systemcall: REmove
 		case SC_Remove:
 		{
@@ -311,50 +288,41 @@ void ExceptionHandler(ExceptionType which)
 			DEBUG(dbgSys, "SC_Remove returning with code:" << result << "\n");
 			kernel->machine->WriteRegister(2, (int)result);
 			delete[] filename;
-
 			IncreasePC();
 			return;
 			break;
 		}
-
 		case SC_Halt:
 		{
 			DEBUG(dbgSys, "Shutdown, initiated by user program.\n");
-
 			SysHalt();
-
 			ASSERTNOTREACHED();
 			break;
 		}
 		case SC_Add:
 		{
 			DEBUG(dbgSys, "Add " << kernel->machine->ReadRegister(4) << " + " << kernel->machine->ReadRegister(5) << "\n");
-
 			/* Process SysAdd Systemcall*/
 			int result;
 			result = SysAdd(/* int op1 */ (int)kernel->machine->ReadRegister(4),
 							/* int op2 */ (int)kernel->machine->ReadRegister(5));
-
 			DEBUG(dbgSys, "Add returning with " << result << "\n");
 			/* Prepare Result */
 			kernel->machine->WriteRegister(2, (int)result);
-
 			IncreasePC();
-
 			return;
-
 			ASSERTNOTREACHED();
-
 			break;
 		}
 
 		case SC_PrintString:
 		{
 			int virtAddr = kernel->machine->ReadRegister(4);
-			char* buffer = User2System(virtAddr,MAX_STRING_LENGTH);
+			char *buffer = User2System(virtAddr, MAX_STRING_LENGTH);
 			int len = strlen(buffer);
 
-			for (int i = 0; i < len; i++) {
+			for (int i = 0; i < len; i++)
+			{
 				kernel->synchConsoleOut->PutChar(buffer[i]);
 			}
 
@@ -370,9 +338,8 @@ void ExceptionHandler(ExceptionType which)
 			int socketID = kernel->machine->ReadRegister(4);
 			int virtAddr = kernel->machine->ReadRegister(5);
 			int portNumber = kernel->machine->ReadRegister(6);
-			char* ipAddr = User2System(virtAddr,MAX_STRING_LENGTH);
+			char *ipAddr = User2System(virtAddr, MAX_STRING_LENGTH);
 			int result;
-			
 
 			struct sockaddr_in server;
 
@@ -380,17 +347,19 @@ void ExceptionHandler(ExceptionType which)
 			server.sin_addr.s_addr = inet_addr(ipAddr);
 			server.sin_port = htons(portNumber);
 
-			if (connect(socketID,(struct sockaddr*) &server, sizeof(server)) < 0) {
-				DEBUG(dbgSys,"Cannot connect to server\n");
+			if (connect(socketID, (struct sockaddr *)&server, sizeof(server)) < 0)
+			{
+				DEBUG(dbgSys, "Cannot connect to server\n");
 				result = -1;
 			}
-			else {
-				DEBUG(dbgSys,"Connect to server successfully!!!\n");
+			else
+			{
+				DEBUG(dbgSys, "Connect to server successfully!!!\n");
 				result = 0;
 			}
 
 			delete[] ipAddr;
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 
 			return;
@@ -402,11 +371,12 @@ void ExceptionHandler(ExceptionType which)
 		{
 			int result = socket(AF_INET, SOCK_STREAM, 0);
 
-			if (result < 0) {
-				DEBUG(dbgSys,"Cannot create socket\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "Cannot create socket\n");
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 			return;
 			ASSERTNOTREACHED();
@@ -418,18 +388,20 @@ void ExceptionHandler(ExceptionType which)
 			int socketID = kernel->machine->ReadRegister(4);
 			int virtAddr = kernel->machine->ReadRegister(5);
 			int len = kernel->machine->ReadRegister(6);
-			char* buffer = User2System(virtAddr,MAX_STRING_LENGTH);
+			char *buffer = User2System(virtAddr, MAX_STRING_LENGTH);
 
-			int result = write(socketID,buffer,len);
+			int result = write(socketID, buffer, len);
 
-			if (result < 0) {
-				DEBUG(dbgSys,"Fail to send message\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "Fail to send message\n");
 			}
-			else {
-				DEBUG(dbgSys,"send message successfully\n");
+			else
+			{
+				DEBUG(dbgSys, "send message successfully\n");
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] buffer;
 			IncreasePC();
 			return;
@@ -442,19 +414,21 @@ void ExceptionHandler(ExceptionType which)
 			int socketID = kernel->machine->ReadRegister(4);
 			int virtAddr = kernel->machine->ReadRegister(5);
 			int len = kernel->machine->ReadRegister(6);
-			char* buffer = new char[256];
+			char *buffer = new char[256];
 
-			int result = read(socketID,buffer,255);
+			int result = read(socketID, buffer, 255);
 
-			if (result < 0) {
-				DEBUG(dbgSys,"Fail to receive message\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "Fail to receive message\n");
 			}
-			else {
-				DEBUG(dbgSys,"Receive message successfully\n");
-				System2User(virtAddr,MAX_STRING_LENGTH,buffer);
+			else
+			{
+				DEBUG(dbgSys, "Receive message successfully\n");
+				System2User(virtAddr, MAX_STRING_LENGTH, buffer);
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] buffer;
 			IncreasePC();
 			return;
@@ -467,14 +441,16 @@ void ExceptionHandler(ExceptionType which)
 			int socketID = kernel->machine->ReadRegister(4);
 			int result = close(socketID);
 
-			if (result < 0) {
-				DEBUG(dbgSys,"cannot close socket\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "cannot close socket\n");
 			}
-			else {
+			else
+			{
 				DEBUG(dbgSys, "Close socket succesfully\n");
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 			return;
 			ASSERTNOTREACHED();
@@ -483,11 +459,11 @@ void ExceptionHandler(ExceptionType which)
 
 		case SC_Bind:
 		{
-			int  socketID = kernel->machine->ReadRegister(4);
+			int socketID = kernel->machine->ReadRegister(4);
 			int virtAddr = kernel->machine->ReadRegister(5);
 			int port = kernel->machine->ReadRegister(6);
 
-			char* ipAddr = User2System(virtAddr,MAX_STRING_LENGTH);
+			char *ipAddr = User2System(virtAddr, MAX_STRING_LENGTH);
 			struct sockaddr_in server;
 			int result;
 
@@ -495,37 +471,41 @@ void ExceptionHandler(ExceptionType which)
 			server.sin_addr.s_addr = inet_addr(ipAddr);
 			server.sin_port = htons(port);
 
-			result = bind(socketID,(struct sockaddr*) &server, sizeof(server));
+			result = bind(socketID, (struct sockaddr *)&server, sizeof(server));
 
-			if (result < 0) {
-				DEBUG(dbgSys,"Fail to bind\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "Fail to bind\n");
 			}
-			else {
-				DEBUG(dbgSys,"Bind succesfull\n");
+			else
+			{
+				DEBUG(dbgSys, "Bind succesfull\n");
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] ipAddr;
 			IncreasePC();
 			return;
 			ASSERTNOTREACHED();
-			break;	
+			break;
 		}
 
 		case SC_Listen:
 		{
 			int socketId = kernel->machine->ReadRegister(4);
 			int backlog = kernel->machine->ReadRegister(6);
-			int result = listen(socketId,backlog);
+			int result = listen(socketId, backlog);
 
-			if (result < 0) {
-				DEBUG(dbgSys,"Fail to listen\n");
+			if (result < 0)
+			{
+				DEBUG(dbgSys, "Fail to listen\n");
 			}
-			else {
-				DEBUG(dbgSys,"Listen Success\n");
+			else
+			{
+				DEBUG(dbgSys, "Listen Success\n");
 			}
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 			return;
 			ASSERTNOTREACHED();
@@ -536,8 +516,8 @@ void ExceptionHandler(ExceptionType which)
 			int socketId = kernel->machine->ReadRegister(4);
 			struct sockaddr_in client;
 			int len = sizeof(client);
-			int result = accept(socketId, (struct sockaddr *)&client, (socklen_t*)&len);
-			kernel->machine->WriteRegister(2,result);
+			int result = accept(socketId, (struct sockaddr *)&client, (socklen_t *)&len);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 			return;
 			ASSERTNOTREACHED();
