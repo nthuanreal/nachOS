@@ -7,6 +7,11 @@ int main()
     int port = 2500;
     int i, size;
     char buffer[1024];
+    char* IP = "192.168.0.14";
+
+    
+    PrintString("Enter string: ");
+    ReadString(IP,13);
 
     serverFd = OpenSocket();
 
@@ -15,7 +20,7 @@ int main()
         Halt();
     }
 
-    if (Bind(serverFd,"192.168.0.14",port) < 0)
+    if (Bind(serverFd,IP,port) < 0)
     {
         PrintString("Cannot bind sokcet\n");
         Halt();

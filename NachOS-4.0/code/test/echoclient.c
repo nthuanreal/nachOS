@@ -8,6 +8,10 @@ int main()
     int i = 0;
     int socketIds[4];
     char recv[1024];
+    char* IP = "192.168.0.14";
+
+    PrintString("Enter IP Address: ");
+    ReadString(IP, 13);
 
     while (i < 4) {
         socketIds[i] = OpenSocket();
@@ -21,7 +25,7 @@ int main()
     i = 0;
 
     while (i < 4) {
-        if (Connect(socketIds[i],"192.168.0.14",2500) < 0) {
+        if (Connect(socketIds[i],IP,2500) < 0) {
             PrintString("Fail to conncect \n");
             Halt();
         }

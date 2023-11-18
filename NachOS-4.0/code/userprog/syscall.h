@@ -45,6 +45,7 @@
 #define SC_Bind 49
 #define SC_Listen 50
 #define SC_Accept 51
+#define SC_ReadString 52
 
 #ifndef IN_ASM
 
@@ -85,6 +86,8 @@ int Bind(int socketID,char* ipAddr, int port);
 int Listen(int socketID, int backlog);
 
 int Accept(int serverID);
+
+void ReadString(char* buffer, int leng);
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
 /* This user program is done (status = 0 means exited normally). */

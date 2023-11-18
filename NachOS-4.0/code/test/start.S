@@ -58,6 +58,14 @@ Add:
 	j 	$31
 	.end Add
 
+	.globl ReadString
+	.ent	ReadString
+ReadString:
+	addiu $2,$0,SC_ReadString
+	syscall
+	j 	$31
+	.end ReadString
+
 	.globl PrintString
 	.ent	PrintString
 PrintString:

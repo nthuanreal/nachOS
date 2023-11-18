@@ -523,6 +523,22 @@ void ExceptionHandler(ExceptionType which)
 			ASSERTNOTREACHED();
 			break;
 		}
+		case SC_ReadString:
+		{
+			int virAddr = kernel->machine->ReadRegister(4);
+			int len = kernel->machine->ReadRegister(5);
+			char *buffer = new char[len+1];
+			for (int i =0; i < len; i++) {
+				buffer[i] = kernel->synchConsoleIn->GetChar();
+			}
+			buffer[len] = '\0';
+			System2User(virAddr,len,buffer);
+			delete[] buffer;
+			IncreasePC();
+			return;
+			ASSERTNOTREACHED();
+			break;
+		}
 
 		default:
 			cerr << "Unexpected system call " << type << "\n";
