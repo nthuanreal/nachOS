@@ -14,6 +14,23 @@
 #include "kernel.h"
 #include "main.h"
 
+int socketIds[20] = {-1};
+bool isUsed[20] = {false};
+
+int findFirstUnused() {
+	int result = -1;
+
+	for (int i = 0; i < 20; i++) {
+		if (isUsed[i] == false) {
+			result = socketIds[i];
+			isUsed[i] =true;
+			break;
+		}
+	}
+
+	return result;
+}
+
 void SysHalt()
 {
 	kernel->interrupt->Halt();

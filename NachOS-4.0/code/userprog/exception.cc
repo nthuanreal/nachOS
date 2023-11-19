@@ -369,7 +369,7 @@ void ExceptionHandler(ExceptionType which)
 
 		case SC_OpenSocket:
 		{
-			int result = socket(AF_INET, SOCK_STREAM, 0);
+			int result = findFirstUnused();
 
 			if (result < 0)
 			{
@@ -553,6 +553,32 @@ void ExceptionHandler(ExceptionType which)
 
 			// copy string from kernel space to user space
 			System2User(addr, lenght, buffer);
+			IncreasePC();
+			return;
+			break;
+		}
+		case SC_SocketTCP:
+		{
+			int result = 0;
+			for (int i = 0; i < 20; i++) {
+				socketIds[i] = socket(AF_INET, SOCK_STREAM, 0);
+				if (socketIds[i] == -1) {
+					result = -1;
+					break;
+				}
+				isUsed[i] = false;
+			}
+			kernel->machine->WriteRegister(2,result);
+			IncreasePC();
+			return;
+			break;
+		}
+		case SC_DeleteSocket:
+		{
+			for (int i = 0; i < 20; i++) {
+				close(socketIds[i]);
+				isUsed[i] = false;
+			}
 			IncreasePC();
 			return;
 			break;

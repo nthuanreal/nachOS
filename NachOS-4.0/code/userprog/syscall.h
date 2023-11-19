@@ -46,6 +46,8 @@
 #define SC_Listen 50
 #define SC_Accept 51
 #define SC_ReadString 52
+#define SC_SocketTCP 53
+#define SC_DeleteSocket 54
 
 #ifndef IN_ASM
 
@@ -88,6 +90,10 @@ int Listen(int socketID, int backlog);
 int Accept(int serverID);
 
 void ReadString(char* buffer, int leng);
+
+int SocketTCP();
+
+void DeleteSocket();
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
 /* This user program is done (status = 0 means exited normally). */

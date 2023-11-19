@@ -6,56 +6,51 @@ int main()
     char *message[4] = {"hello server", "my name is thanh",
                         "nice to meet you", "see you later"};
     int i = 0;
-    int socketIds[4];
+    int socketId;
     char recv[1024];
     char* IP = "192.168.0.14";
+    int port = 2500;
+
+    if (SocketTCP() < 0) {
+        PrintString("Cannot creat file decriptors table\n");
+        DeleteSocket();
+        Halt();
+    }
 
     PrintString("Enter IP Address: ");
     ReadString(IP, 13);
 
     while (i < 4) {
-        socketIds[i] = OpenSocket();
-        if (socketIds[i] < 0) {
-            PrintString("Fail to create socket");
+        socketId = OpenSocket();
+
+        if (socketId < 0) {
+            PrintString("Cannot create socket\n");
+            DeleteSocket();
             Halt();
         }
-        i++;
-    }
 
-    i = 0;
-
-    while (i < 4) {
-        if (Connect(socketIds[i],IP,2500) < 0) {
-            PrintString("Fail to conncect \n");
+        if (Connect(socketId,IP,port) < 0) {
+            PrintString("Cannot connect to server\n");
+            DeleteSocket();
             Halt();
         }
-        i++;
-    }
 
-    i = 0;
-    PrintString("\nReceive from server\n");
-    while (i < 4) {
-        if (Send(socketIds[i],message[i],255) < 0) {
-            PrintString("Fail to send message\n");
+        if (Send(socketId,message[i],255) < 0) {
+            PrintString("Cannot Send to server\n");
+            DeleteSocket();
             Halt();
         }
-        else {
-            if (Receive(socketIds[i],recv,1023) < 0) {
-                PrintString("fail to receive.\n");
-                Halt();
-            }
-            else{
-                PrintString(recv);
-                PrintString(" \n");
-            }
-        }
-        i++;
-    }
-    i = 0;
 
-    while (i < 4) {
-        MyCloseSocket(socketIds[i]);
+        if (Receive(socketId,recv,1023) < 0) {
+            PrintString("Cannot receive from server\n");
+            DeleteSocket();
+            Halt();
+        }
+        
+        PrintString(recv);
+        PrintString("\n");
         i++;
     }
+    DeleteSocket();
     Halt();
 }

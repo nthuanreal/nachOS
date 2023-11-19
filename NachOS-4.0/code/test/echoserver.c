@@ -9,7 +9,11 @@ int main()
     char buffer[1024];
     char* IP = "192.168.0.14";
 
-    
+    if (SocketTCP() < 0) {
+        PrintString("Cannot create file descriptors table\n");
+        DeleteSocket();
+        Halt();
+    }
     PrintString("Enter string: ");
     ReadString(IP,13);
 
@@ -17,17 +21,20 @@ int main()
 
     if (serverFd < 0) {
         PrintString("Cannot create socket\n");
+        DeleteSocket();
         Halt();
     }
 
     if (Bind(serverFd,IP,port) < 0)
     {
         PrintString("Cannot bind sokcet\n");
+        DeleteSocket();
         Halt();
     }
     if (Listen(serverFd, 10) < 0)
     {
         PrintString("Listen error\n");
+        DeleteSocket();
         Halt();
     }
     while (1)
@@ -36,6 +43,7 @@ int main()
         if ((clientFd = Accept(serverFd)) < 0)
         {
             PrintString("accept error");
+            DeleteSocket();
             Halt();
         }
 
@@ -43,6 +51,7 @@ int main()
         if (size < 0)
         {
             PrintString("read error");
+            DeleteSocket();
             Halt();
         }
         PrintString("received from client: ");
@@ -65,6 +74,7 @@ int main()
         if (Send(clientFd, buffer, size) < 0)
         {
             PrintString("write error\n");
+            DeleteSocket();
             Halt();
         }
         MyCloseSocket(clientFd);

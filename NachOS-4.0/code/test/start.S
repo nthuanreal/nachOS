@@ -58,6 +58,22 @@ Add:
 	j 	$31
 	.end Add
 
+	.globl SocketTCP
+	.ent	SocketTCP
+SocketTCP:
+	addiu $2,$0,SC_SocketTCP
+	syscall
+	j 	$31
+	.end SocketTCP
+
+	.globl DeleteSocket
+	.ent	DeleteSocket
+DeleteSocket:
+	addiu $2,$0,SC_DeleteSocket
+	syscall
+	j 	$31
+	.end DeleteSocket
+
 	.globl ReadString
 	.ent	ReadString
 ReadString:
