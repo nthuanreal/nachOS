@@ -33,6 +33,7 @@ int main()
     }
 
     i = 0;
+    PrintString("\nReceive from server\n");
     while (i < 4) {
         if (Send(socketIds[i],message[i],255) < 0) {
             PrintString("Fail to send message\n");
@@ -44,7 +45,6 @@ int main()
                 Halt();
             }
             else{
-                PrintString("Receive from server: ");
                 PrintString(recv);
                 PrintString(" \n");
             }

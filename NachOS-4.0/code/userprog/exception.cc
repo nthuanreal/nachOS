@@ -414,9 +414,9 @@ void ExceptionHandler(ExceptionType which)
 			int socketID = kernel->machine->ReadRegister(4);
 			int virtAddr = kernel->machine->ReadRegister(5);
 			int len = kernel->machine->ReadRegister(6);
-			char *buffer = new char[256];
+			char *buffer = new char[len];
 
-			int result = read(socketID, buffer, 255);
+			int result = read(socketID, buffer, len);
 
 			if (result < 0)
 			{
