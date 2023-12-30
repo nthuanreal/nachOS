@@ -1,15 +1,15 @@
 #include "syscall.h"
 
 int main() {
-    int pid;
+    int pid = -1;
 
-    pid = Exec("createFile");
+    pid = Exec("add");
 
     if (pid < 0) {
-        PrintString("False");
+        PrintString("False\n");
     }
     else {
-        PrintString("Success");
+        PrintString("Success\n");
         Join(pid);
     }
 }

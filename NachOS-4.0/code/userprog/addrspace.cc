@@ -84,7 +84,7 @@ AddrSpace::AddrSpace()
 AddrSpace::AddrSpace(char* fileName) {
     OpenFile* executable = kernel->fileSystem->Open(fileName);
     NoffHeader noffH;
-    unsigned int size, numPages;
+    unsigned int size;
     unsigned int i, numClear;
 
     if (executable == NULL) {
@@ -130,7 +130,6 @@ AddrSpace::AddrSpace(char* fileName) {
     for (i = 0; i < numPages; i++) {
         pageTable[i].virtualPage = i;
         pageTable[i].physicalPage = kernel->gPhysPageBitMap->FindAndSet();
-        cerr << pageTable[i].physicalPage << endl;
         pageTable[i].valid = TRUE;
         pageTable[i].use = FALSE;
         pageTable[i].dirty = FALSE;
@@ -149,8 +148,8 @@ AddrSpace::AddrSpace(char* fileName) {
                 PageSize, noffH.code.inFileAddr + (i * PageSize));
     }
 
-    printf("Tao doc xong phan code roi nha\n");
-    printf("Xem thu kich thuoc phan init data nao: %d \n",noffH.initData.size);
+    printf("Finish loading code segment\n");
+    printf("Init Data Segment size: %d \n",noffH.initData.size);
 
     if (noffH.initData.size > 0) {
         for (i = 0; i < numPages; i++)
@@ -289,13 +288,11 @@ bool AddrSpace::Load(char *fileName)
 
 void AddrSpace::Execute()
 {
-    cerr << "Checkin Execute\n";
     kernel->currentThread->space = this;
 
     this->InitRegisters(); // set the initial register values
     this->RestoreState();  // load page table register
 
-    cerr << "Complete preparing" << endl;
     kernel->machine->Run(); // jump to the user progam
 
     ASSERTNOTREACHED(); // machine->Run never returns;

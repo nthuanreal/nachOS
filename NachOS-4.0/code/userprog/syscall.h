@@ -48,6 +48,9 @@
 #define SC_ReadString 52
 #define SC_SocketTCP 53
 #define SC_DeleteSocket 54
+#define SC_CreateSemaphore 55
+#define SC_Wait 56
+#define SC_Signal 57
 
 #ifndef IN_ASM
 
@@ -121,8 +124,32 @@ SpaceId ExecV(int argc, char* argv[]);
 /* Only return once the user program "id" has finished.  
  * Return the exit status.
  */
-int Join(SpaceId id); 	
+int Join(SpaceId id); 
+
+/*
+ * Create Semaphore with name and initial value
+ * Return 0 if success
+ * Return -1 if fail
+*/
+
+int CreateSemaphore(char* name, int initValue);
+
+/*
+ * Semaphore has this name will wait
+ * Return 0 on success
+ * Return -1 on failure
+*/
  
+int Wait(char* name);
+
+
+/*
+ * Semaphore has this name will release
+ * Return 0 on success
+ * Return -1 on failure
+*/
+
+int Signal(char* name);
 
 /* File system operations: Create, Remove, Open, Read, Write, Close
  * These functions are patterned after UNIX -- files represent

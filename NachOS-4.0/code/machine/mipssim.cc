@@ -57,19 +57,15 @@ void Machine::Run()
 {
 	Instruction *instr = new Instruction; // storage for decoded instruction
 
-	cout << "Checkin run" << endl;
 	if (debug->IsEnabled('m'))
 	{
 		cout << "Starting program in thread: " << kernel->currentThread->getName();
 		cout << ", at time: " << kernel->stats->totalTicks << "\n";
 	}
 	kernel->interrupt->setStatus(UserMode);
-	cerr << "Complete set status" << endl;
 	for (;;)
 	{
-		cerr << "DCMM Vong lap" << endl;
 		OneInstruction(instr);
-		cerr << "Ra day la deo co exception ne" << endl;
 		kernel->interrupt->OneTick();
 		if (singleStep && (runUntilTime <= kernel->stats->totalTicks))
 			Debugger();

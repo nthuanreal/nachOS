@@ -104,7 +104,6 @@ public:
 	{
 		int fileDescriptor = OpenForReadWrite(name, FALSE);
 
-		printf("Tao la ham open trong filesys.h ne\n");
 		if (fileDescriptor == -1)
 			return NULL;
 		return new OpenFile(fileDescriptor);

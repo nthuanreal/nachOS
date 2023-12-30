@@ -19,7 +19,6 @@ PTable::PTable(int size) {
 
     bm->Mark(0);
     pcb[0] = new PCB(0);
-    pcb[0]->SetFileName("./test/shell");
     pcb[0]->parentID = -1;
 }
 
@@ -43,16 +42,18 @@ int PTable::ExecUpdate(char *fn) {
     bmsem->P();
 
     if (fn == NULL) {
-        DEBUG(dbgSys,"can not execute null file name\n");
+        printf("can not execute null file name\n");
         bmsem->V();
         return -1;
     }
 
     if (strcmp(fn,kernel->currentThread->getName()) == 0) {
-        DEBUG(dbgSys,"can not execute itself\n");
+        printf("can not execute itself\n");
         bmsem->V();
         return -1;
     }
+
+    cerr << kernel->currentThread->getName() << endl;
 
     int index = this->GetFreeSlot();
     
@@ -78,7 +79,7 @@ int PTable::ExitUpdate(int exitcode) {
     int id = kernel->currentThread->processID;
 
     if (id == 0) {
-        DEBUG(dbgSys,"Main process\n");
+        printf("Main process\n");
         kernel->currentThread->FreeSpace();
         kernel->interrupt->Halt();
         return 0;

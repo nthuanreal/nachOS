@@ -60,8 +60,7 @@ void ExceptionHandler(ExceptionType which)
 	case NoException:
 	{
 		kernel->interrupt->setStatus(SystemMode);
-		SysHalt();
-		ASSERTNOTREACHED();
+		break;
 	}
 	case PageFaultException:
 	{
@@ -639,22 +638,14 @@ void ExceptionHandler(ExceptionType which)
 			virtAddr = kernel->machine->ReadRegister(4);
 			name = User2System(virtAddr,MAX_STRING_LENGTH+1);
 
+			cerr << name << endl;
+
 			if (name == NULL) {
 				kernel->machine->WriteRegister(2,-1);
 				IncreasePC();
 				return;
 			}
 
-			OpenFile* openFile = kernel->fileSystem->Open(name);
-
-			if (openFile == NULL) {
-				printf("Can not open this file\n");
-				kernel->machine->WriteRegister(2,-1);
-				delete[] name;
-				IncreasePC();
-				return;
-			}
-			delete openFile;
 
 			int id = kernel->pTab->ExecUpdate(name);
 			kernel->machine->WriteRegister(2,id);
@@ -675,14 +666,64 @@ void ExceptionHandler(ExceptionType which)
 		{
 			int exitStatus = kernel->machine->ReadRegister(4);
 
-			if (exitStatus != 0) {
+
+			int result = kernel->pTab->ExitUpdate(exitStatus);
+
+			if (result < 0) {
+				cerr << "Fail to exit" << endl;
+			}
+
+			IncreasePC();
+			return;
+		}
+		case SC_CreateSemaphore:
+		{
+			int virtAddr = kernel->machine->ReadRegister(4);
+			int initValue = kernel->machine->ReadRegister(5);
+
+			char* semName = User2System(virtAddr,MAX_STRING_LENGTH+1);
+
+			
+			int result  = kernel->semTab->Create(semName,initValue);
+
+			kernel->machine->WriteRegister(2,result);
+			delete[] semName;
+			IncreasePC();
+			return;
+		}
+		case SC_Wait:
+		{
+			int virtAddr = kernel->machine->ReadRegister(4);
+			char* semName = User2System(virtAddr,MAX_STRING_LENGTH+1);
+
+			if (semName == NULL) {
+				printf("Not enough space\n");
 				IncreasePC();
 				return;
 			}
+			
+			int result = kernel->semTab->Wait(semName);
 
-			int result = kernel->pTab->ExitUpdate(exitStatus);
-			kernel->currentThread->FreeSpace();
-			kernel->currentThread->Finish();
+			kernel->machine->WriteRegister(2,result);
+			delete[] semName;
+			IncreasePC();
+			return;
+		}
+		case SC_Signal:
+		{
+			int virtAddr = kernel->machine->ReadRegister(4);
+			char* semName = User2System(virtAddr,MAX_STRING_LENGTH + 1);
+
+			if (semName == NULL) {
+				printf("Not enough space\n");
+				IncreasePC();
+				return;
+			}
+			
+			int result = kernel->semTab->Signal(semName);
+
+			kernel->machine->WriteRegister(2,result);
+			delete[] semName;
 			IncreasePC();
 			return;
 		}

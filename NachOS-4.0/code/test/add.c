@@ -14,6 +14,13 @@ main()
   
   result = Add(42, 23);
 
+  if (result == (42+23)) {
+    PrintString("True\n");
+  }
+  else {
+    PrintString("False\n");
+  }
+
   Halt();
   /* not reached */
 }

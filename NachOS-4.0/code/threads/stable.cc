@@ -25,7 +25,7 @@ STable::~STable() {
 int STable::Create(char *name, int init) {
 
     if (name == NULL) {
-        printf("name is NULL\n");
+        printf("STable::Create name is NULL\n");
         return -1;
     }
 
