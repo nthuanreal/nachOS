@@ -57,6 +57,54 @@ void ExceptionHandler(ExceptionType which)
 	//DEBUG(dbgSys, "\nDEBUG: Received Exception " << which << " type: " << type << "\n");
 	switch (which)
 	{
+	case NoException:
+	{
+		kernel->interrupt->setStatus(SystemMode);
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case PageFaultException:
+	{
+		cerr << "No valid tranlation\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case ReadOnlyException:
+	{
+		cerr << "Write attempted to page marked read-only\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case BusErrorException:
+	{
+		cerr << "Translation resulted in an invalid physical address\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case AddressErrorException:
+	{
+		cerr << "Unaligned reference or one that was beyond the end of the address space\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case OverflowException:
+	{
+		cerr << "Integer overflow in add or sub\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case IllegalInstrException:
+	{
+		cerr << "Unimplement instruction\n";
+		SysHalt();
+		ASSERTNOTREACHED();
+	}
+	case NumExceptionTypes:
+	{
+		cerr << "Number Exception Type\n";
+		kernel->interrupt->Halt();
+		return;
+	}
 	case SyscallException:
 		switch (type)
 		{
@@ -582,6 +630,61 @@ void ExceptionHandler(ExceptionType which)
 			IncreasePC();
 			return;
 			break;
+		}
+		case SC_Exec:
+		{
+			int virtAddr;
+			char* name;
+
+			virtAddr = kernel->machine->ReadRegister(4);
+			name = User2System(virtAddr,MAX_STRING_LENGTH+1);
+
+			if (name == NULL) {
+				kernel->machine->WriteRegister(2,-1);
+				IncreasePC();
+				return;
+			}
+
+			OpenFile* openFile = kernel->fileSystem->Open(name);
+
+			if (openFile == NULL) {
+				printf("Can not open this file\n");
+				kernel->machine->WriteRegister(2,-1);
+				delete[] name;
+				IncreasePC();
+				return;
+			}
+			delete openFile;
+
+			int id = kernel->pTab->ExecUpdate(name);
+			kernel->machine->WriteRegister(2,id);
+			delete[] name;
+			IncreasePC();
+			return;
+		}
+		case SC_Join:
+		{
+			int id = kernel->machine->ReadRegister(4);
+
+			int res  = kernel->pTab->JoinUpdate(id);
+			kernel->machine->WriteRegister(2,id);
+			IncreasePC();
+			return;
+		}
+		case SC_Exit:
+		{
+			int exitStatus = kernel->machine->ReadRegister(4);
+
+			if (exitStatus != 0) {
+				IncreasePC();
+				return;
+			}
+
+			int result = kernel->pTab->ExitUpdate(exitStatus);
+			kernel->currentThread->FreeSpace();
+			kernel->currentThread->Finish();
+			IncreasePC();
+			return;
 		}
 		//
 		default:

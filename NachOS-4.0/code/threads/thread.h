@@ -90,6 +90,15 @@ class Thread {
 
     // basic thread operations
 
+    int processID;
+    int exitStatus;
+
+    void FreeSpace() {
+      if (space != NULL) {
+        delete space;
+      }
+    }
+
     void Fork(VoidFunctionPtr func, void *arg); 
     				// Make thread run (*func)(arg)
     void Yield();  		// Relinquish the CPU if any 

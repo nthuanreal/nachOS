@@ -94,6 +94,8 @@ void ReadString(char* buffer, int leng);
 int SocketTCP();
 
 void DeleteSocket();
+
+
 /* Address space control operations: Exit, Exec, Execv, and Join */
 
 /* This user program is done (status = 0 means exited normally). */

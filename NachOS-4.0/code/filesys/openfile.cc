@@ -119,6 +119,7 @@ OpenFile::ReadAt(char *into, int numBytes, int position)
     int i, firstSector, lastSector, numSectors;
     char *buf;
 
+    printf("Tao den tu openfile.cc\n");
     if ((numBytes <= 0) || (position >= fileLength))
     	return 0; 				// check request
     if ((position + numBytes) > fileLength)		

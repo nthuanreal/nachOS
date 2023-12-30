@@ -64,6 +64,7 @@ public:
 
 	int ReadAt(char *into, int numBytes, int position)
 	{
+		printf("Tao den tu openfile.h\n");
 		Lseek(file, position, 0);
 		return ReadPartial(file, into, numBytes);
 	}
