@@ -54,7 +54,7 @@
 void ExceptionHandler(ExceptionType which)
 {
 	int type = kernel->machine->ReadRegister(2);
-	//DEBUG(dbgSys, "\nDEBUG: Received Exception " << which << " type: " << type << "\n");
+	// DEBUG(dbgSys, "\nDEBUG: Received Exception " << which << " type: " << type << "\n");
 	switch (which)
 	{
 	case NoException:
@@ -114,7 +114,7 @@ void ExceptionHandler(ExceptionType which)
 			virtAddr = kernel->machine->ReadRegister(4);
 			// MaxFileLength là = 32
 			filename = User2System(virtAddr, MaxFileLength);
-			if (filename == NULL || filename == "\n" || filename == "\0")
+			if (filename == NULL || filename == "\n" ||filename == "\0")
 			{
 				DEBUG(dbgSys, "\n Not enough memory in system");
 				kernel->machine->WriteRegister(2, -1);
@@ -223,7 +223,7 @@ void ExceptionHandler(ExceptionType which)
 				DEBUG(dbgSys, "DEBUG: the number of bytes read: "
 								  << i);
 				DEBUG(dbgSys, "DEBUG: Reading data: "
-								  << buf <<"\n");
+								  << buf << "\n");
 				delete[] buf;
 				IncreasePC();
 				break;
@@ -245,7 +245,7 @@ void ExceptionHandler(ExceptionType which)
 				DEBUG(dbgSys, "DEBUG: the number of bytes read: "
 								  << bytesRead);
 				DEBUG(dbgSys, "DEBUG: Reading data: "
-								  << buf <<"\n");
+								  << buf << "\n");
 			}
 			else
 			{
@@ -264,8 +264,6 @@ void ExceptionHandler(ExceptionType which)
 			int bufAddr = kernel->machine->ReadRegister(4);
 			int NumBuf = kernel->machine->ReadRegister(5);
 			int fileID = kernel->machine->ReadRegister(6);
-			int OldPos;
-			int NewPos;
 			// mode = 1 means that openFile is just for reading only
 			if (fileID >= 20 || fileID == 0)
 			{
@@ -318,7 +316,7 @@ void ExceptionHandler(ExceptionType which)
 		// systemcall: SEEK
 		case SC_Seek:
 		{
-			//DEBUG(dbgSys, "DEBUG: Seek file\n");
+			// DEBUG(dbgSys, "DEBUG: Seek file\n");
 			int result = SysSeek(kernel->machine->ReadRegister(4), kernel->machine->ReadRegister(5));
 			DEBUG(dbgSys, "DEBUG: SC_Seek returning with code:" << result << "\n");
 			kernel->machine->WriteRegister(2, (int)result);
@@ -329,7 +327,7 @@ void ExceptionHandler(ExceptionType which)
 		// systemcall: REmove
 		case SC_Remove:
 		{
-			//DEBUG(dbgSys, "DEBUG: Remove file\n");
+			// DEBUG(dbgSys, "DEBUG: Remove file\n");
 			char *filename = User2System((int)kernel->machine->ReadRegister(4), MaxFileLength);
 			int result = SysRemove(filename);
 			DEBUG(dbgSys, "DEBUG: SC_Remove returning with code:" << result << "\n");
@@ -573,7 +571,7 @@ void ExceptionHandler(ExceptionType which)
 		//
 		case SC_ReadString:
 		{
-			//DEBUG(dbgSys, "\n SC_ReadString call ...");
+			// DEBUG(dbgSys, "\n SC_ReadString call ...");
 			int addr, lenght;
 			char *buffer;
 
@@ -597,7 +595,6 @@ void ExceptionHandler(ExceptionType which)
 				i++;
 			}
 			buffer += '\0';
-
 			// copy string from kernel space to user space
 			System2User(addr, lenght, buffer);
 			IncreasePC();
@@ -607,22 +604,25 @@ void ExceptionHandler(ExceptionType which)
 		case SC_SocketTCP:
 		{
 			int result = 0;
-			for (int i = 0; i < 20; i++) {
+			for (int i = 0; i < 20; i++)
+			{
 				socketIds[i] = socket(AF_INET, SOCK_STREAM, 0);
-				if (socketIds[i] == -1) {
+				if (socketIds[i] == -1)
+				{
 					result = -1;
 					break;
 				}
 				isUsed[i] = false;
 			}
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			IncreasePC();
 			return;
 			break;
 		}
 		case SC_DeleteSocket:
 		{
-			for (int i = 0; i < 20; i++) {
+			for (int i = 0; i < 20; i++)
+			{
 				close(socketIds[i]);
 				isUsed[i] = false;
 			}
@@ -633,32 +633,113 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Exec:
 		{
 			int virtAddr;
-			char* name;
+			char *name;
 
 			virtAddr = kernel->machine->ReadRegister(4);
-			name = User2System(virtAddr,MAX_STRING_LENGTH+1);
+			name = User2System(virtAddr, MAX_STRING_LENGTH + 1);
 
 			cerr << name << endl;
 
-			if (name == NULL) {
-				kernel->machine->WriteRegister(2,-1);
+			if (name == NULL)
+			{
+				kernel->machine->WriteRegister(2, -1);
 				IncreasePC();
 				return;
 			}
 
-
 			int id = kernel->pTab->ExecUpdate(name);
-			kernel->machine->WriteRegister(2,id);
+			kernel->machine->WriteRegister(2, id);
 			delete[] name;
 			IncreasePC();
 			return;
+		}
+		case SC_ExecV:
+		{
+					kernel->machine->WriteRegister(2, -1);
+					IncreasePC();
+					return;
+			// // get progname
+			// char *progname = new char[MAX_STRING_LENGTH];
+			// progname = User2System(argv, MAX_STRING_LENGTH +1 );
+			// // not enough memory or reading exec_name failed
+			// if (progname == NULL )
+			// {
+			// 	kernel->machine->WriteRegister(2, -1);
+			// 	IncreasePC();
+			// 	return;
+			// }
+
+			// // get args, and store them in kargv
+			// int uargv;
+			// char **kargv = new char *[argc];
+			// for (int i = 0; i < argc; i++)
+			// {
+			// 	kargv[i] = new char[MAX_STRING_LENGTH+1];
+			// 	if (kernel->machine->ReadMem(argv + i * sizeof(char *), sizeof(char *),&uargv) == FALSE)
+			// 	{
+			// 		kernel->machine->WriteRegister(2, -1);
+			// 		IncreasePC();
+			// 		return;
+			// 	}
+			// 	if (ReadStr(uargv, kargv[i], MAX_ARG_LEN) == -1)
+			// 	{
+			// 		kernel->machine->WriteRegister(2, -1);
+			// 		IncreasePC();
+			// 		return;
+			// 	}
+			// 	DEBUG(dbgSys, "[System Call] Arg " << i << ": " << kargv[i]);
+			// }
+
+			// if (kernel->currentThread->space->Load(progname) == FALSE)
+			// {
+			// 	kernel->machine->WriteRegister(2, -1);
+			// 	IncreasePC();
+			// 	return;
+			// }
+			// DEBUG(dbgSys, "[System Call] Program " << kprogname << " Loaded.");
+
+			// // set up stack
+			// int stackBottom;
+			// int argHead;
+
+			// stackBottom = kernel->machine->ReadRegister(StackReg) + 16 - UserStackSize + 16;
+
+			// argHead = stackBottom + sizeof(char *) * argc;
+
+			// for (int i = 0; i < argc; i++)
+			// {
+			// 	if (kernel->machine->WriteMem(stackBottom + i * sizeof(char *),
+			// 								  sizeof(char *), argHead) == FALSE)
+			// 		return 1;
+			// 	int len = WriteStr(argHead, kargv[i], MAX_ARG_LEN);
+			// 	if (len == -1)
+			// 		return 1;
+			// 	argHead += len;
+
+			// 	delete[] kargv[i];
+			// }
+			// delete[] kargv;
+			// delete[] kprogname;
+
+			// // since we need to pass arguments,
+			// // we do not use AddrSpace::Execute directly.
+			// kernel->currentThread->space->InitRegisters();
+			// kernel->currentThread->space->RestoreState();
+			// // pass arguements
+			// kernel->machine->WriteRegister(4, argc);
+			// kernel->machine->WriteRegister(5, stackBottom);
+
+			// kernel->machine->Run();
+
+			// ASSERTNOTREACHED();
+			// return 1;
 		}
 		case SC_Join:
 		{
 			int id = kernel->machine->ReadRegister(4);
 
-			int res  = kernel->pTab->JoinUpdate(id);
-			kernel->machine->WriteRegister(2,id);
+			int res = kernel->pTab->JoinUpdate(id);
+			kernel->machine->WriteRegister(2, res);
 			IncreasePC();
 			return;
 		}
@@ -666,10 +747,10 @@ void ExceptionHandler(ExceptionType which)
 		{
 			int exitStatus = kernel->machine->ReadRegister(4);
 
-
 			int result = kernel->pTab->ExitUpdate(exitStatus);
 
-			if (result < 0) {
+			if (result < 0)
+			{
 				cerr << "Fail to exit" << endl;
 			}
 
@@ -681,12 +762,11 @@ void ExceptionHandler(ExceptionType which)
 			int virtAddr = kernel->machine->ReadRegister(4);
 			int initValue = kernel->machine->ReadRegister(5);
 
-			char* semName = User2System(virtAddr,MAX_STRING_LENGTH+1);
+			char *semName = User2System(virtAddr, MAX_STRING_LENGTH + 1);
 
-			
-			int result  = kernel->semTab->Create(semName,initValue);
+			int result = kernel->semTab->Create(semName, initValue);
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] semName;
 			IncreasePC();
 			return;
@@ -694,17 +774,18 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Wait:
 		{
 			int virtAddr = kernel->machine->ReadRegister(4);
-			char* semName = User2System(virtAddr,MAX_STRING_LENGTH+1);
+			char *semName = User2System(virtAddr, MAX_STRING_LENGTH + 1);
 
-			if (semName == NULL) {
+			if (semName == NULL)
+			{
 				printf("Not enough space\n");
 				IncreasePC();
 				return;
 			}
-			
+
 			int result = kernel->semTab->Wait(semName);
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] semName;
 			IncreasePC();
 			return;
@@ -712,17 +793,18 @@ void ExceptionHandler(ExceptionType which)
 		case SC_Signal:
 		{
 			int virtAddr = kernel->machine->ReadRegister(4);
-			char* semName = User2System(virtAddr,MAX_STRING_LENGTH + 1);
+			char *semName = User2System(virtAddr, MAX_STRING_LENGTH + 1);
 
-			if (semName == NULL) {
+			if (semName == NULL)
+			{
 				printf("Not enough space\n");
 				IncreasePC();
 				return;
 			}
-			
+
 			int result = kernel->semTab->Signal(semName);
 
-			kernel->machine->WriteRegister(2,result);
+			kernel->machine->WriteRegister(2, result);
 			delete[] semName;
 			IncreasePC();
 			return;

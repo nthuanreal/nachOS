@@ -52,6 +52,10 @@ int PTable::ExecUpdate(char *fn) {
         bmsem->V();
         return -1;
     }
+    if (strcmp(fn,"exit") == 0) {
+        bmsem->V();
+        return -9;
+    }
 
     cerr << kernel->currentThread->getName() << endl;
 
@@ -79,7 +83,7 @@ int PTable::ExitUpdate(int exitcode) {
     int id = kernel->currentThread->processID;
 
     if (id == 0) {
-        printf("Main process\n");
+        printf("Main process.exitcode: %d \n", exitcode );
         kernel->currentThread->FreeSpace();
         kernel->interrupt->Halt();
         return 0;

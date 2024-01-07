@@ -16,7 +16,7 @@
 
 int socketIds[20] = {-1};
 bool isUsed[20] = {false};
-
+#define MAX_ARG_LEN 20
 int findFirstUnused() {
 	int result = -1;
 

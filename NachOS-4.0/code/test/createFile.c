@@ -9,6 +9,5 @@ int main()
   PrintString("Nhap ten file muon tao: ");
   ReadString(filename, 32);
   result = Create(filename);
-  Halt();
-  /* not reached */
+  
 } 

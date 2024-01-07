@@ -15,12 +15,9 @@ main()
   result = Add(42, 23);
 
   if (result == (42+23)) {
-    PrintString("True\n");
+    PrintString("add.c:- Result = 55\n");
   }
   else {
-    PrintString("False\n");
+    PrintString("add.c: Error\n");
   }
-
-  Halt();
-  /* not reached */
 }

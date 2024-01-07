@@ -6,10 +6,10 @@ int main() {
     pid = Exec("add");
 
     if (pid < 0) {
-        PrintString("False\n");
+        PrintString("exec.c: execute False\n");
     }
     else {
-        PrintString("Success\n");
+        PrintString("exec.c: execute Success\n");
         Join(pid);
     }
 }
